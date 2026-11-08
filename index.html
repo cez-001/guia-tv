@@ -274,7 +274,10 @@ function render(){
 }
 
 function logoFail(img){ const s=document.createElement('span'); s.textContent=img.alt; img.replaceWith(s); }
-const tileHTML = c => '<div class="tile">'+(c.icon
+// logos que o EPG envia errados (ex.: o da Vodafone no Mezzo) -> mostra o nome
+const BAD_LOGOS = ['logovector.net/wp-content/uploads/2013/04/342506-vodafone-13-logo.png'];
+const goodLogo = u => u && !BAD_LOGOS.some(b => u.includes(b));
+const tileHTML = c => '<div class="tile">'+(goodLogo(c.icon)
   ? '<img src="'+esc(logo(c.icon))+'" alt="'+esc(c.name)+'" loading="lazy" onerror="logoFail(this)">'
   : '<span>'+esc(c.name)+'</span>')+'</div>';
 

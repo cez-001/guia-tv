@@ -22,10 +22,10 @@ DAZN 2
 DAZN 3
 DAZN 4
 DAZN 5
-Eurosport 1
+Eurosport
 Eurosport 2
 Hollywood
-Star
+STAR CHANNEL
 Star Comedy
 Star Movies
 Star Crime
@@ -44,19 +44,19 @@ AMC
 AMC Break
 Crime Investigation
 RTP Memória
-V+
+V+ TVI
 SIC Radical
 Canal Q
 24 Kitchen
-The Food Network
+Food Network
 Casa e Cozinha
 Odisseia
 História
 National Geographic
-National Geographic
-Discovery Channel
-Travel Channel
-MTV Portugal
+National Geographic Wild
+Discovery
+Travel
+MTV
 MTV 00’s
 MCM Top
 Mezzo

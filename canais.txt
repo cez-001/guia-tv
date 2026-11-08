@@ -1,0 +1,88 @@
+RTP 1
+RTP 2
+SIC
+TVI
+SIC Notícias
+RTP 3
+CNN Portugal
+CMTV
+News Now
+BTV
+Canal 11
+Sport TV+
+Sport TV 1
+Sport TV 2
+Sport TV 3
+Sport TV 4
+Sport TV 5
+Sport TV 6
+Sport TV 7
+DAZN 1
+DAZN 2
+DAZN 3
+DAZN 4
+DAZN 5
+Eurosport 1
+Eurosport 2
+Hollywood
+Star
+Star Comedy
+Star Movies
+Star Crime
+Star Life
+AXN
+AXN Movies
+AXN White
+NOS Studios
+TVCine TOP
+TVCine EDITION
+TVCine EMOTION
+TVCine ACTION
+Cinemundo
+Syfy
+AMC
+AMC Break
+Crime Investigation
+RTP Memória
+V+
+SIC Radical
+Canal Q
+24 Kitchen
+The Food Network
+Casa e Cozinha
+Odisseia
+História
+National Geographic
+National Geographic
+Discovery Channel
+Travel Channel
+MTV Portugal
+MTV 00’s
+MCM Top
+Mezzo
+ARTV
+BBC One
+BBC Two
+BBC Three
+BBC Four
+CNN
+Euronews
+Globo
+TV Record
+SIC Mulher
+SIC Caras
+Sky Sports F1
+DAZN F1
+Red Bull TV
+Fuel TV
+Motorvision
+Cartoon Network
+Nickelodeon
+Disney Channel
+SIC K
+Baby TV
+Nick Jr
+Disney Junior
+Panda
+Panda Biggs
+Panda Kids

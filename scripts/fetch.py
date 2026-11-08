@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Vai buscar a programação (via tv_grab_pt_vodafone, do projeto XMLTV) e gera data/epg.json."""
-import json, os, subprocess, sys, tempfile
+"""Vai buscar a programação dos canais em canais.txt (via tv_grab_pt_vodafone, do XMLTV) e gera data/epg.json."""
+import json, os, re, subprocess, sys, tempfile, unicodedata
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 GRAB = "tv_grab_pt_vodafone"
-OUT = os.path.join(os.path.dirname(__file__), "..", "data", "epg.json")
+HERE = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(HERE, "..", "data", "epg.json")
+WANTED = os.path.join(HERE, "..", "canais.txt")
 LISBON = ZoneInfo("Europe/Lisbon")
 
 
@@ -17,6 +19,12 @@ def run(args):
     return r.stdout
 
 
+def norm(s):
+    s = unicodedata.normalize("NFD", (s or "").lower())
+    s = "".join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
 def ts(s):
     s = s.strip()
     try:
@@ -25,12 +33,53 @@ def ts(s):
         return int(datetime.strptime(s[:14], "%Y%m%d%H%M%S").replace(tzinfo=LISBON).timestamp())
 
 
+def pick_channels(available, wanted):
+    """available: [(id, name)]; wanted: [str]. Devolve (ids escolhidos, nomes não encontrados)."""
+    items = []
+    for cid, name in available:
+        n = norm(name)
+        items.append((cid, n, n.replace(" ", ""), re.sub(r" hd$", "", n).replace(" ", "")))
+    chosen, missing = [], []
+    for line in wanted:
+        n = norm(re.sub(r"^\d+\s*[.)\-]\s*", "", line))
+        if not n:
+            continue
+        ns = n.replace(" ", "")
+        m = next((x for x in items if x[1] == n), None) or next((x for x in items if x[2] == ns), None) \
+            or next((x for x in items if x[3] == ns), None)
+        if not m and len(ns) > 4:
+            cand = [x for x in items if ns in x[2]]
+            if len(cand) == 1:
+                m = cand[0]
+        if m:
+            if m[0] not in chosen:
+                chosen.append(m[0])
+        else:
+            missing.append(line.strip())
+    return chosen, missing
+
+
 def main():
     cfg = os.path.join(tempfile.mkdtemp(), "grab.conf")
     open(cfg, "w").close()
-    ids = [c.get("id") for c in ET.fromstring(run(["--config-file", cfg, "--list-channels"])).iter("channel")]
-    if not ids:
+    avail = [(c.get("id"), (c.findtext("display-name") or c.get("id")).strip())
+             for c in ET.fromstring(run(["--config-file", cfg, "--list-channels"])).iter("channel")]
+    if not avail:
         sys.exit("A lista de canais veio vazia.")
+    print(f"{len(avail)} canais disponíveis na fonte.")
+
+    wanted = [l.strip() for l in open(WANTED, encoding="utf-8")] if os.path.exists(WANTED) else []
+    ids, missing = pick_channels(avail, wanted)
+    if missing:
+        print("Não encontrei:", ", ".join(missing))
+        print("::group::Canais disponíveis na fonte")
+        print("\n".join(sorted(n for _, n in avail)))
+        print("::endgroup::")
+    if not ids:
+        print("Nenhum canal de canais.txt reconhecido; vou buscar todos.")
+        ids = [i for i, _ in avail]
+    print(f"A obter {len(ids)} canais...")
+
     with open(cfg, "w") as f:
         f.write("".join(f"channel={i}\n" for i in ids))
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Vai buscar a programação dos canais em canais.txt (via tv_grab_pt_vodafone, do XMLTV) e gera data/epg.json."""
 import json, os, re, subprocess, sys, tempfile, unicodedata
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -83,16 +84,19 @@ def main():
     with open(cfg, "w") as f:
         f.write("".join(f"channel={i}\n" for i in ids))
 
-    root = ET.fromstring(run(["--config-file", cfg, "--days", "7", "--quiet"]))
+    root = ET.fromstring(run(["--config-file", cfg, "--days", "4", "--quiet"]))
     channels, progs = {}, {}
     for c in root.iter("channel"):
         icon = c.find("icon")
+        src = icon.get("src") if icon is not None else ""
+        src = re.sub(r"/width/\d+/height/\d+", "/width/240/height/150", src)
         channels[c.get("id")] = {
             "id": c.get("id"),
             "name": (c.findtext("display-name") or c.get("id")).strip(),
-            "icon": icon.get("src") if icon is not None else "",
+            "icon": src,
         }
-    cutoff = datetime.now(timezone.utc).timestamp() - 3 * 3600
+    cutoff = datetime.now(timezone.utc).timestamp() - 8 * 3600
+    films = set()
     for p in root.iter("programme"):
         try:
             s, e = ts(p.get("start")), ts(p.get("stop"))
@@ -100,9 +104,35 @@ def main():
             continue
         if e < cutoff:
             continue
+        title = (p.findtext("title") or "").strip()
+        info = {}
+        y = re.match(r"\d{4}", (p.findtext("date") or "").strip())
+        if y:
+            info["y"] = int(y.group())
+        cats = [c.text.strip() for c in p.findall("category") if c.text and c.text.strip()]
+        if cats:
+            info["g"] = ", ".join(cats[:2])
+        is_ep = p.find("episode-num") is not None
+        if not is_ep and "y" in info:
+            info["f"] = 1                      # candidato a filme
+            films.add((title, info["y"]))
         progs.setdefault(p.get("channel"), []).append(
-            [s, e, (p.findtext("title") or "").strip(), (p.findtext("desc") or "").strip()[:300]]
+            [s, e, title, (p.findtext("desc") or "").strip()[:320], info]
         )
+
+    try:
+        import imdb
+        print(f"A procurar notas do IMDb para {len(films)} filmes...")
+        found = imdb.ratings_for(films)
+        for lst in progs.values():
+            for pr in lst:
+                k = (pr[2], pr[4].get("y"))
+                if pr[4].get("f") and k in found:
+                    pr[4]["r"], _, pr[4]["i"] = found[k]
+        print(f"Notas encontradas: {len(found)} de {len(films)}")
+    except Exception as ex:
+        print("Sem notas do IMDb desta vez:", ex)
+
     for k in progs:
         progs[k].sort()
     out = {
